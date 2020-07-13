@@ -258,6 +258,78 @@ this.initializeNetwork();]]></StartupCode>
 						</ParameterEditor>
 					</Properties>                 
 				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594551034293</Id>
+					<Name><![CDATA[sensorTransmitRad]]></Name>
+					<X>-840</X><Y>-210</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[100]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594551034291</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594551070015</Id>
+					<Name><![CDATA[fogTransmitRad]]></Name>
+					<X>-840</X><Y>-180</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[350]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594551070013</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594551092710</Id>
+					<Name><![CDATA[edgeTransmitRad]]></Name>
+					<X>-840</X><Y>-150</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[400]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594551092708</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
 			</Variables>
 			<Functions>
 				<Function AccessType="private" StaticFunction="false">
@@ -274,7 +346,11 @@ this.initializeNetwork();]]></StartupCode>
 int yStep = (int) (this.viewHeight/3);
 int sensorStep = (int) (this.viewWidth/this.sensorsCount);
 for(int i=0;i<this.sensorsCount;i++){
-	this.add_smartSensors(5, new Coordinate(i*sensorStep,(i%2==0)?0:(int)(yStep/2)));
+	int y = 0;
+	if(i%3==1){y = (int)(yStep/1.5);}
+	if(i%3==2){y = (int)(yStep);}
+	
+	this.add_smartSensors(5, new Coordinate(i*sensorStep,y),this.sensorTransmitRad);
 }
 
 for(SmartSensor sensor:smartSensors){
@@ -282,8 +358,8 @@ for(SmartSensor sensor:smartSensors){
 }
 
 int fogStep = (int) (this.viewWidth/this.fogCount);
-for(int i=0;i<this.fogCount;i++){
-	this.add_fogNodes(new Coordinate(i*fogStep,(i%2==1)?yStep:(int)(yStep*1.5)));
+for(int i=0;i<this.fogCount;i++){ 
+	this.add_fogNodes(new Coordinate(i*fogStep,(i%2==1)?yStep/3:(int)(yStep*1.5)),this.fogTransmitRad);
 }
 
 for(FogNode node:fogNodes){
@@ -292,12 +368,13 @@ for(FogNode node:fogNodes){
 
 int gateStep = (int) (this.viewWidth/this.gatewayCount);
 for(int i=0;i<this.gatewayCount;i++){
-	this.add_gateways(new Coordinate(i*gateStep,2*yStep));
+	this.add_gateways(new Coordinate(i*gateStep,2*yStep),this.edgeTransmitRad);
 }
 
 for(Gateway node:gateways){
 	node.setXYZ(node.coordinate.x, node.coordinate.y,0.);
 }
+cloud.setXYZ(cloud.coordinate.x, cloud.coordinate.y,0.);
 
 System.out.println("Environment initialized");]]></Body>
 				</Function>
@@ -314,6 +391,10 @@ System.out.println("Environment initialized");]]></Body>
 					<Body><![CDATA[List<EdgeNode> population = Stream.concat(smartSensors.stream(), Stream.concat(fogNodes.stream(),gateways.stream())).collect(Collectors.toList());
 for(EdgeNode node:population){
 	node.addPossibleConnections(this.findNodesWithinRange(population, node));
+}
+
+for(Gateway gateway:gateways){
+	gateway.connections.connectTo(cloud);
 }
 
 
@@ -340,7 +421,7 @@ for(EdgeNode node:population){
 					<Body><![CDATA[List<EdgeNode> result = new ArrayList<>();
 for(EdgeNode agent:population){
 	double d = node.getCoordinate().distanceTo(agent.getCoordinate());
-	if(d!=0 && d<this.connectionRange){
+	if(d!=0 && d<agent.getCommunicationRadius()&&d<node.getCommunicationRadius()){
 		result.add(agent);
 	}
 }
@@ -404,6 +485,9 @@ return result;
 							<Value Class="CodeValue">
 								<Code><![CDATA[new Coordinate(new Random().nextInt(500), new Random().nextInt(500))]]></Code>
 							</Value>
+						</Parameter>
+						<Parameter>
+							<Name><![CDATA[communicationRadius]]></Name>
 						</Parameter>
 					</Parameters>
 					<ReplicationFlag>true</ReplicationFlag>
@@ -473,6 +557,9 @@ return result;
 								<Code><![CDATA[new Coordinate(new Random().nextInt(500), new Random().nextInt(500))]]></Code>
 							</Value>
 						</Parameter>
+						<Parameter>
+							<Name><![CDATA[communicationRadius]]></Name>
+						</Parameter>
 					</Parameters>
 					<ReplicationFlag>true</ReplicationFlag>
 					<Replication Class="CodeValue">
@@ -541,6 +628,9 @@ return result;
 								<Code><![CDATA[new Coordinate(new Random().nextInt(500), new Random().nextInt(500))]]></Code>
 							</Value>
 						</Parameter>
+						<Parameter>
+							<Name><![CDATA[communicationRadius]]></Name>
+						</Parameter>
 					</Parameters>
 					<ReplicationFlag>true</ReplicationFlag>
 					<Replication Class="CodeValue">
@@ -574,6 +664,77 @@ return result;
 						<Code><![CDATA[""]]></Code>
 					</LocationNameCode>
 					<InitializationType>EMPTY</InitializationType>
+					<InitializationDatabaseTableQuery>
+						<TableReference>
+						</TableReference>
+					</InitializationDatabaseTableQuery>
+					<InitializationDatabaseType>ONE_AGENT_PER_DATABASE_RECORD</InitializationDatabaseType>
+					<QuantityColumn>
+					</QuantityColumn>
+				</EmbeddedObject>
+				<EmbeddedObject>
+					<Id>1594552778606</Id>
+					<Name><![CDATA[cloud]]></Name>
+					<X>-510</X><Y>70</Y>
+					<Label><X>-25</X><Y>-30</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<PresentationId>1594552779865</PresentationId>
+					<ActiveObjectClass>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[Cloud]]></ClassName>
+					</ActiveObjectClass>
+					<GenericParameterSubstitute>
+						<GenericParameterSubstituteReference>
+							<PackageName><![CDATA[graphfog]]></PackageName>
+							<ClassName><![CDATA[Cloud]]></ClassName>
+							<ItemName><![CDATA[1594552453932]]></ItemName>
+						</GenericParameterSubstituteReference>
+					</GenericParameterSubstitute>
+					<Parameters>
+						<Parameter>
+							<Name><![CDATA[coordinate]]></Name>
+							<Value Class="CodeValue">
+								<Code><![CDATA[new Coordinate((int)(viewWidth/2),viewHeight)]]></Code>
+							</Value>
+						</Parameter>
+						<Parameter>
+							<Name><![CDATA[communicationRadius]]></Name>
+						</Parameter>
+					</Parameters>
+					<ReplicationFlag>false</ReplicationFlag>
+					<Replication Class="CodeValue">
+						<Code><![CDATA[100]]></Code>
+					</Replication>
+					<CollectionType>ARRAY_LIST_BASED</CollectionType>
+					<InEnvironment>true</InEnvironment>	
+					<InitialLocationType>AT_ANIMATION_POSITION</InitialLocationType>
+					<XCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</XCode>
+					<YCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</YCode>
+					<ZCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</ZCode>
+					<ColumnCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</ColumnCode>
+					<RowCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</RowCode>
+					<LatitudeCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</LatitudeCode>
+					<LongitudeCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</LongitudeCode>
+					<LocationNameCode Class="CodeValue">
+						<Code><![CDATA[""]]></Code>
+					</LocationNameCode>
+					<InitializationType>SPECIFIED_NUMBER</InitializationType>
 					<InitializationDatabaseTableQuery>
 						<TableReference>
 						</TableReference>
@@ -640,6 +801,25 @@ return result;
 					<Id>1594481324097</Id>
 					<Name><![CDATA[gateways_presentation]]></Name>
 					<X>-60</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<DrawingMode>AGENT_CURRENT_POSITION</DrawingMode>
+					<ScaleType>AUTOMATICALLY_CALCULATED</ScaleType>
+					<GISScaleForRealEmbeddedObjectPresentationSize>1000</GISScaleForRealEmbeddedObjectPresentationSize>
+					<GISScaleForFixedEmbeddedObjectPresentationSize>1000000000</GISScaleForFixedEmbeddedObjectPresentationSize>
+					<Latitude>0.0</Latitude>
+					<Longitude>0.0</Longitude>
+				</EmbeddedObjectPresentation>
+				<EmbeddedObjectPresentation>
+					<Id>1594552779865</Id>
+					<Name><![CDATA[cloud_presentation]]></Name>
+					<X>-80</X><Y>120</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>true</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -807,6 +987,30 @@ return result;
 						</ParameterEditor>
 					</Properties>                 
 				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594550833276</Id>
+					<Name><![CDATA[communicationRadius]]></Name>
+					<X>320</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[200]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594550833274</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
 			</Variables>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
@@ -852,6 +1056,30 @@ return result;
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[return this.coordinate;]]></Body>
+				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[int]]></ReturnType>
+					<Id>1594550833272</Id>
+					<Name><![CDATA[getCommunicationRadius]]></Name>
+					<X>550</X><Y>-50</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return this.communicationRadius;]]></Body>
+				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[String]]></ReturnType>
+					<Id>1594563777968</Id>
+					<Name><![CDATA[getNodeId]]></Name>
+					<X>350</X><Y>-30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return "ss_"+this.getId();]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -928,7 +1156,7 @@ return result;
 
 			<Presentation>
 				<Image>
-					<Id>1594465378740</Id>
+					<Id>1594552287581</Id>
 					<Name><![CDATA[image]]></Name>
 					<X>-20</X><Y>-20</Y>
 					<Label><X>0</X><Y>-10</Y></Label>
@@ -944,7 +1172,7 @@ return result;
 					<ImageFiles>
 						<ImageResourceReference>
 							<PackageName><![CDATA[graphfog]]></PackageName>
-							<ClassName><![CDATA[IoT_Sensor_light-bg@4x.png]]></ClassName>
+							<ClassName><![CDATA[IoT_Coffee-pot_dark-bg@4x.png]]></ClassName>
 						</ImageResourceReference>
 					</ImageFiles>
 					<OriginalSize>false</OriginalSize>
@@ -960,6 +1188,8 @@ return result;
 			<Id>1594480983805</Id>
 			<Name><![CDATA[FogNode]]></Name>
 			<ClientAreaTopLeft><X>0</X><Y>0</Y></ClientAreaTopLeft>
+			<Import><![CDATA[import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;]]></Import>
 			<Implements><![CDATA[EdgeNode]]></Implements>
 			<Generic>false</Generic>
 			<GenericParameter>
@@ -1054,6 +1284,51 @@ return result;
 			<CurrentLevel>1594480983804</CurrentLevel>
 			<ConnectionsId>1594480983800</ConnectionsId>
 			<Variables>
+				<Variable Class="PlainVariable">
+					<Id>1594557271235</Id>
+					<Name><![CDATA[availableCP]]></Name>
+					<X>-230</X><Y>120</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[Constants.PROCESS_FOG]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1594559294943</Id>
+					<Name><![CDATA[availableTP]]></Name>
+					<X>-230</X><Y>150</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[Constants.TRANSFER_FOG]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1594563582647</Id>
+					<Name><![CDATA[connectedCapabilities]]></Name>
+					<X>-230</X><Y>190</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[Map<String,CapabilityAdvert>]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[new ConcurrentHashMap<String,CapabilityAdvert>();]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
 				<Variable Class="Parameter">
 					<Id>1594481096714</Id>
 					<Name><![CDATA[coordinate]]></Name>
@@ -1075,7 +1350,276 @@ return result;
 						</ParameterEditor>
 					</Properties>                 
 				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594550707575</Id>
+					<Name><![CDATA[communicationRadius]]></Name>
+					<X>140</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[150]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594550707573</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
 			</Variables>
+			<StatechartElements>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1594557138324</Id>
+					<Name><![CDATA[AVAILABLE]]></Name>
+					<X>190</X><Y>180</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor>-16711936</FillColor>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1594557168954</Id>
+					<Name><![CDATA[BUSY]]></Name>
+					<X>180</X><Y>260</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="130" Height="50">
+						<FillColor>-65536</FillColor>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1594561324592</Id>
+					<Name><![CDATA[ADPROCESS]]></Name>
+					<X>340</X><Y>180</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="EntryPoint" ParentState="ROOT_NODE">
+					<Id>1594557133735</Id>
+					<Name><![CDATA[statechartAV]]></Name>
+					<X>240</X><Y>140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>40</Y></Point>
+					</Points>
+					<Properties Target="1594557138324">
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1594557195248</Id>
+					<Name><![CDATA[transition]]></Name>
+					<X>210</X><Y>210</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>50</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1594557138324" Target="1594557168954" Trigger="condition">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[this.availableCP<=0]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[satisfies]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1594557783982</Id>
+					<Name><![CDATA[transition1]]></Name>
+					<X>260</X><Y>260</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>-50</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1594557168954" Target="1594557138324" Trigger="condition">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[this.availableCP>0]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1594561330933</Id>
+					<Name><![CDATA[transition2]]></Name>
+					<X>290</X><Y>200</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>50</X><Y>0</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1594557138324" Target="1594561324592" Trigger="message">
+						<Action><![CDATA[processAdvertised(msg);]]></Action>
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Advertisment]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1594561447469</Id>
+					<Name><![CDATA[transition3]]></Name>
+					<X>340</X><Y>190</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>-50</X><Y>0</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1594561324592" Target="1594557138324" Trigger="condition">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+			</StatechartElements>
+			<Events>
+				<Event>
+					<Id>1594556669150</Id>
+					<Name><![CDATA[advertiseCapabilities]]></Name>
+					<X>-230</X><Y>80</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties TriggerType="timeout" Mode="cyclic">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1594627200000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</RecurrenceCode>
+						<Condition><![CDATA[false]]></Condition>
+					</Properties>
+					<Action><![CDATA[if(statechartAV.getState()==BUSY){
+	return;
+}
+CapabilityAdvert own = new CapabilityAdvert(getNodeId(),availableCP,availableTP,0);
+List<CapabilityAdvert> available = Lists.newArrayList(own);
+available.addAll(connectedCapabilities.values());
+Advertisment msg = new Advertisment(getNodeId(),available);
+possibleConnections.deliverToAllConnected(msg);]]></Action>
+				</Event>
+				<Event>
+					<Id>1594564378475</Id>
+					<Name><![CDATA[cleanup]]></Name>
+					<X>-230</X><Y>40</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties TriggerType="timeout" Mode="cyclic">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[2]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1594627200000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[500]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[MILLISECOND]]></Unit>
+						</RecurrenceCode>
+						<Condition><![CDATA[false]]></Condition>
+					</Properties>
+					<Action><![CDATA[clearOld();]]></Action>
+				</Event>
+			</Events>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
 					<ReturnModificator>VOID</ReturnModificator>
@@ -1121,6 +1665,65 @@ return result;
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[return this.coordinate;]]></Body>
 				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[int]]></ReturnType>
+					<Id>1594550765973</Id>
+					<Name><![CDATA[getCommunicationRadius]]></Name>
+					<X>370</X><Y>-50</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return this.communicationRadius;]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1594562443136</Id>
+					<Name><![CDATA[processAdvertised]]></Name>
+					<X>180</X><Y>-140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[ad]]></Name>
+						<Type><![CDATA[Advertisment]]></Type>
+					</Parameter>
+					<Body><![CDATA[CapabilityAdvert cap = ad.getRemoteConvolutionExcluding(getNodeId());
+this.connectedCapabilities.put(ad.senderId,cap);
+System.out.println(getNodeId()+" processed capability advert "+cap.toString());]]></Body>
+				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[String]]></ReturnType>
+					<Id>1594563728759</Id>
+					<Name><![CDATA[getNodeId]]></Name>
+					<X>360</X><Y>-140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return "fn_"+this.getId();]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1594564095939</Id>
+					<Name><![CDATA[clearOld]]></Name>
+					<X>180</X><Y>-170</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[for(String key: connectedCapabilities.keySet()){
+	if(System.currentTimeMillis()-connectedCapabilities.get(key).timestamp>Constants.TIMEOUT_MILLIS){
+		connectedCapabilities.remove(key);
+		System.out.println("removed entry"+key);
+	}
+}]]></Body>
+				</Function>
 			</Functions>
 			<AgentLinks>
 				<AgentLink>
@@ -1135,6 +1738,11 @@ return result;
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>true</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[FogNode]]></ClassName>
+						<ItemName><![CDATA[statechartAV]]></ItemName>
+					</StatechartReference>
 					<LineStyle>SOLID</LineStyle>
 					<LineWidth>1</LineWidth>
 					<LineColor>-16777216</LineColor>
@@ -1154,6 +1762,11 @@ return result;
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>false</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[FogNode]]></ClassName>
+						<ItemName><![CDATA[statechartAV]]></ItemName>
+					</StatechartReference>
 					<DrawLine>true</DrawLine>
 					<LineStyle>DOTTED</LineStyle>
 					<LineWidth>1</LineWidth>
@@ -1342,6 +1955,30 @@ return result;
 						</ParameterEditor>
 					</Properties>                 
 				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594550799305</Id>
+					<Name><![CDATA[communicationRadius]]></Name>
+					<X>330</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[300]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594550799303</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
 			</Variables>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
@@ -1388,6 +2025,30 @@ return result;
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[return this.coordinate;]]></Body>
 				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[int]]></ReturnType>
+					<Id>1594550799302</Id>
+					<Name><![CDATA[getCommunicationRadius]]></Name>
+					<X>560</X><Y>-50</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return this.communicationRadius;]]></Body>
+				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[String]]></ReturnType>
+					<Id>1594563793783</Id>
+					<Name><![CDATA[getNodeId]]></Name>
+					<X>360</X><Y>-140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return "gw_"+this.getId();]]></Body>
+				</Function>
 			</Functions>
 			<AgentLinks>
 				<AgentLink>
@@ -1402,9 +2063,10 @@ return result;
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>true</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<DrawLine>true</DrawLine>
 					<LineStyle>SOLID</LineStyle>
-					<LineWidth>1</LineWidth>
-					<LineColor>-16777216</LineColor>
+					<LineWidth>2</LineWidth>
+					<LineColor>-16777088</LineColor>
 					<LineZOrder>UNDER_AGENTS</LineZOrder>
 					<LineArrow>NONE</LineArrow>
 					<LineArrowPosition>END</LineArrowPosition>
@@ -1479,6 +2141,257 @@ return result;
 						<ImageResourceReference>
 							<PackageName><![CDATA[graphfog]]></PackageName>
 							<ClassName><![CDATA[IoT_Device-gateway_light-bg@4x.png]]></ClassName>
+						</ImageResourceReference>
+					</ImageFiles>
+					<OriginalSize>false</OriginalSize>
+				</Image>
+			</Presentation>
+
+				</Level>
+			</Presentation>
+
+		</ActiveObjectClass>
+		<!--   =========   Active Object Class   ========  -->
+		<ActiveObjectClass>
+			<Id>1594552453934</Id>
+			<Name><![CDATA[Cloud]]></Name>
+			<ClientAreaTopLeft><X>0</X><Y>0</Y></ClientAreaTopLeft>
+			<Generic>false</Generic>
+			<GenericParameter>
+				<Id>1594552453932</Id>
+				<Name><![CDATA[1594552453932]]></Name>
+				<GenericParameterValue Class="CodeValue">
+					<Code><![CDATA[T extends Agent]]></Code>
+				</GenericParameterValue>
+				<GenericParameterLabel><![CDATA[Generic parameter:]]></GenericParameterLabel>
+			</GenericParameter>
+			<FlowChartsUsage>ENTITY</FlowChartsUsage>
+			<SamplesToKeep>100</SamplesToKeep>
+			<LimitNumberOfArrayElements>false</LimitNumberOfArrayElements>
+			<ElementsLimitValue>100</ElementsLimitValue>
+			<MakeDefaultViewArea>true</MakeDefaultViewArea>
+			<SceneGridColor/>
+			<SceneBackgroundColor/>
+			<SceneSkybox>null</SceneSkybox>
+			<AgentProperties>
+	 			<SpaceType>CONTINUOUS</SpaceType>			
+				<EnvironmentDefinesInitialLocation>true</EnvironmentDefinesInitialLocation>
+				<RotateAnimationTowardsMovement>true</RotateAnimationTowardsMovement>
+				<RotateAnimationVertically>false</RotateAnimationVertically>
+				<VelocityCode Class="CodeUnitValue">
+					<Code><![CDATA[10]]></Code>
+					<Unit Class="SpeedUnits"><![CDATA[MPS]]></Unit>
+				</VelocityCode>
+				<PhysicalLength Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalLength>
+				<PhysicalWidth Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalWidth>
+				<PhysicalHeight Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalHeight>
+			</AgentProperties>
+			<EnvironmentProperties>
+					<EnableSteps>false</EnableSteps>
+					<StepDurationCode Class="CodeUnitValue">
+						<Code><![CDATA[1.0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</StepDurationCode>
+					<SpaceType>CONTINUOUS</SpaceType>
+					<WidthCode><![CDATA[500]]></WidthCode>
+					<HeightCode><![CDATA[500]]></HeightCode>
+					<ZHeightCode><![CDATA[0]]></ZHeightCode>
+					<ColumnsCountCode><![CDATA[100]]></ColumnsCountCode>
+					<RowsCountCode><![CDATA[100]]></RowsCountCode>
+					<NeigborhoodType>MOORE</NeigborhoodType>
+					<LayoutType>USER_DEF</LayoutType>
+					<LayoutTypeApplyOnStartup>true</LayoutTypeApplyOnStartup>
+					<NetworkType>USER_DEF</NetworkType>
+					<NetworkTypeApplyOnStartup>true</NetworkTypeApplyOnStartup>
+					<ConnectionsPerAgentCode><![CDATA[2]]></ConnectionsPerAgentCode>
+					<ConnectionsRangeCode><![CDATA[50]]></ConnectionsRangeCode>
+					<NeighborLinkFractionCode><![CDATA[0.95]]></NeighborLinkFractionCode>
+					<MCode><![CDATA[10]]></MCode>
+			</EnvironmentProperties>
+			<DatasetsCreationProperties>
+				<AutoCreate>true</AutoCreate>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1594627200000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</RecurrenceCode>
+			</DatasetsCreationProperties>
+			<ScaleRuler>
+				<Id>1594552453930</Id>
+				<Name><![CDATA[scale]]></Name>
+				<X>0</X><Y>-150</Y>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>false</PresentationFlag>
+				<ShowLabel>false</ShowLabel>
+				<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+				<Length>100</Length>
+				<Rotation>0</Rotation>
+				<ScaleType>BASED_ON_LENGTH</ScaleType>
+				<ModelLength>10</ModelLength>
+				<LengthUnits>METER</LengthUnits>
+				<Scale>10</Scale>
+				<InheritedFromParentAgentType>true</InheritedFromParentAgentType>
+			</ScaleRuler>
+			<CurrentLevel>1594552453933</CurrentLevel>
+			<ConnectionsId>1594552453929</ConnectionsId>
+			<Variables>
+				<Variable Class="Parameter">
+					<Id>1594552585169</Id>
+					<Name><![CDATA[coordinate]]></Name>
+					<X>70</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[Coordinate]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<ParameterEditor>
+							<Id>1594552585167</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1594552585172</Id>
+					<Name><![CDATA[communicationRadius]]></Name>
+					<X>200</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[150]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1594552585170</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+			</Variables>
+			<Functions>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Coordinate]]></ReturnType>
+					<Id>1594552585164</Id>
+					<Name><![CDATA[getCoordinate]]></Name>
+					<X>630</X><Y>-100</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return this.coordinate;]]></Body>
+				</Function>
+				<Function AccessType="public" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[int]]></ReturnType>
+					<Id>1594552585166</Id>
+					<Name><![CDATA[getCommunicationRadius]]></Name>
+					<X>430</X><Y>-50</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return this.communicationRadius;]]></Body>
+				</Function>
+			</Functions>
+			<AgentLinks>
+				<AgentLink>
+					<Id>1594552453929</Id>
+					<Name><![CDATA[connections]]></Name>
+					<X>50</X><Y>-50</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<HandleReceiveInConnections>false</HandleReceiveInConnections>
+					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
+					<AgentLinkBidirectional>true</AgentLinkBidirectional>
+					<MessageType><![CDATA[Object]]></MessageType>
+					<DrawLine>true</DrawLine>
+					<LineStyle>SOLID</LineStyle>
+					<LineWidth>2</LineWidth>
+					<LineColor>-16777088</LineColor>
+					<LineZOrder>UNDER_AGENTS</LineZOrder>
+					<LineArrow>NONE</LineArrow>
+					<LineArrowPosition>END</LineArrowPosition>
+				</AgentLink>
+			</AgentLinks>
+
+			<ContainerLinks>
+				<ContainerLink>
+					<Id>1594552779876</Id>
+					<Name><![CDATA[main]]></Name>
+					<X>50</X><Y>-100</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<ActiveObjectClass>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[Main]]></ClassName>
+					</ActiveObjectClass>
+				</ContainerLink>
+			</ContainerLinks>
+
+			<Presentation>
+				<Level>
+					<Id>1594552453933</Id>
+					<Name><![CDATA[level]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<Z>0</Z>
+					<LevelVisibility>DIM_NON_CURRENT</LevelVisibility>
+
+			<Presentation>
+				<Image>
+					<Id>1594552645712</Id>
+					<Name><![CDATA[image]]></Name>
+					<X>-60</X><Y>-70</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Width>120</Width>
+					<Height>120</Height>
+					<Rotation>0.0</Rotation>
+					<ImageFiles>
+						<ImageResourceReference>
+							<PackageName><![CDATA[graphfog]]></PackageName>
+							<ClassName><![CDATA[Internet-alt2_light-bg@4x.png]]></ClassName>
 						</ImageResourceReference>
 					</ImageFiles>
 					<OriginalSize>false</OriginalSize>
@@ -1593,6 +2506,15 @@ return result;
 				<Parameter>
 					<ParameterName><![CDATA[connectionRange]]></ParameterName>
 				</Parameter>
+				<Parameter>
+					<ParameterName><![CDATA[sensorTransmitRad]]></ParameterName>
+				</Parameter>
+				<Parameter>
+					<ParameterName><![CDATA[fogTransmitRad]]></ParameterName>
+				</Parameter>
+				<Parameter>
+					<ParameterName><![CDATA[edgeTransmitRad]]></ParameterName>
+				</Parameter>
 			</Parameters>			
 			<PresentationProperties>
 				<EnableZoomAndPanning>true</EnableZoomAndPanning>
@@ -1662,21 +2584,197 @@ public class Coordinate implements Serializable {
 	void addPossibleConnection(EdgeNode other);
 	void addPossibleConnections(List<EdgeNode> other);
 	Coordinate getCoordinate();
+	int getCommunicationRadius();
+	String getNodeId();
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1594554009443</Id>
+			<Name><![CDATA[CapabilityAdvert]]></Name>
+			<Text><![CDATA[/**
+ * CapabilityAdvert
+ */	
+public class CapabilityAdvert implements Serializable {
+
+	public final String nodeID;
+	public final int computePower;
+	public final int transferPower;
+	public final int cloudTransferPower;
+	public final long timestamp;
+
+	
+    /**
+     * Default constructor
+     */
+    public CapabilityAdvert(String nodeId, int cp, int tp, int ctp) {
+    	this.nodeID = nodeId;
+    	this.computePower = cp;
+    	this.transferPower = tp;
+    	this.cloudTransferPower = ctp;
+    	this.timestamp = System.currentTimeMillis();
+    }
+
+	@Override
+	public String toString() {
+		return String.format("%s: computePower=%d, transferPower=%d, cloudTransferPower=%d",nodeID,computePower,transferPower,cloudTransferPower);
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1594555067245</Id>
+			<Name><![CDATA[Constants]]></Name>
+			<Text><![CDATA[/**
+ * Constants
+ */	
+public class Constants implements Serializable {
+
+	public static final double PENALTY_COEF=0.5;
+	
+	public static final int TRANSFER_FOG = 256;
+	public static final int PROCESS_FOG = 256;
+
+	public static final long TIMEOUT_MILLIS = 2000;
+
+	
+    /**
+     * Default constructor
+     */
+    public Constants() {
+    }
+
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1594555162196</Id>
+			<Name><![CDATA[EdgeResource]]></Name>
+			<Text><![CDATA[/**
+ * EdgeResources
+ */	
+public class EdgeResource implements Serializable {
+	private final String id;
+	private final CapabilityAdvert ownAvailableCapabilities;
+	private final Map<String, EdgeResource> connected = new HashMap();
+
+    /**
+     * Default constructor
+     */
+    public EdgeResource(String id, CapabilityAdvert own) {
+    	this.id = id;
+    	this.ownAvailableCapabilities = own;
+    }
+    
+    public void addAdvertised(CapabilityAdvert ad) {}
+
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+	//add ignored node to visited
+	private CapabilityAdvert getConvolutionIgnoringNode(CapabilityAdvert current, EdgeResource res, Set<String> visited) {
+		int cp = current.computePower;
+		int tp = current.transferPower;
+		int ctp = current.cloudTransferPower;
+		if(res.connected.isEmpty()||visited.containsAll(res.connected.keySet())) {
+	    	return new CapabilityAdvert(id,(int)cp,(int)tp,(int)ctp);
+		}
+	\
+    	return new CapabilityAdvert(id,(int)cp,(int)tp,(int)ctp);
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1594560542787</Id>
+			<Name><![CDATA[Advertisment]]></Name>
+			<Text><![CDATA[/**
+ * Advertisment
+ */	
+public class Advertisment implements Serializable {
+    public final List<CapabilityAdvert> resources;
+    public final String senderId;
+    /**
+     * Default constructor
+     */
+    public Advertisment(String id, List<CapabilityAdvert> resources) {
+    	this.senderId = id;
+    	this.resources = resources;
+    }
+    
+    public CapabilityAdvert getRemoteConvolutionExcluding(String nodeId) {
+    	double cp=0,tp=0,ctp=0;
+    	System.out.println("convoluting "+senderId);
+    	for(CapabilityAdvert ad: resources) {
+    		System.out.print(ad.toString()+" ");
+    		if(ad.nodeID.equals(nodeId)) {
+    			continue;
+    		}
+    		cp+=Constants.PENALTY_COEF*ad.computePower;
+    		tp+=Constants.PENALTY_COEF*ad.transferPower;
+    		ctp+=Constants.PENALTY_COEF*ad.cloudTransferPower;
+    	}
+    	System.out.println();
+    	return new CapabilityAdvert(senderId,(int)cp,(int)tp,(int)ctp);
+    }
+    
+
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
 
 }]]></Text>
 		</JavaClass>
 	</JavaClasses>
 	<ModelResources>
 		<Resource>
-			<Path><![CDATA[IoT_Sensor_light-bg@4x.png]]></Path>
-			<ReferencedFromUserCode>false</ReferencedFromUserCode>
-		</Resource>
-		<Resource>
 			<Path><![CDATA[IoT_Hardware-board_light-bg@4x.png]]></Path>
 			<ReferencedFromUserCode>false</ReferencedFromUserCode>
 		</Resource>
 		<Resource>
 			<Path><![CDATA[IoT_Device-gateway_light-bg@4x.png]]></Path>
+			<ReferencedFromUserCode>false</ReferencedFromUserCode>
+		</Resource>
+		<Resource>
+			<Path><![CDATA[IoT_Coffee-pot_dark-bg@4x.png]]></Path>
+			<ReferencedFromUserCode>false</ReferencedFromUserCode>
+		</Resource>
+		<Resource>
+			<Path><![CDATA[Internet-alt2_light-bg@4x.png]]></Path>
 			<ReferencedFromUserCode>false</ReferencedFromUserCode>
 		</Resource>
 	</ModelResources>
