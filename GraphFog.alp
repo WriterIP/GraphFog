@@ -444,6 +444,7 @@ for(EdgeNode node:population){
 
 for(Gateway gateway:gateways){
 	gateway.connections.connectTo(cloud);
+	gateway.possibleConnections.connectTo(cloud);
 }
 
 
@@ -1168,6 +1169,7 @@ return result;
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
 					<Properties Width="140" Height="30">
+						<EntryAction><![CDATA[transmitPacket();]]></EntryAction>
 						<FillColor/>
 					</Properties>
 				</StatechartElement>
@@ -1359,7 +1361,7 @@ return result;
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
-					<Body><![CDATA[ProcessingRequest request = new ProcessingRequest(this.dataAmount, this.dataAmount, this.getNodeId());
+					<Body><![CDATA[ProcessingRequest request = new ProcessingRequest(this.dataAmount, this.getNodeId());
 generatedStack.push(request);
 return request;]]></Body>
 				</Function>
@@ -1374,6 +1376,9 @@ return request;]]></Body>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[ProcessingRequest request = generatedStack.pop();
+Agent selection = peekConnection();
+send(request, selection);
+System.out.println(getNodeId()+" sent data to "+((EdgeNode)selection).getNodeId());
 ]]></Body>
 				</Function>
 				<Function AccessType="default" StaticFunction="false">
@@ -1752,7 +1757,7 @@ import com.google.common.collect.Lists;]]></Import>
 				</StatechartElement>
 				<StatechartElement Class="State" ParentState="ROOT_NODE">
 					<Id>1600032406125</Id>
-					<Name><![CDATA[doing]]></Name>
+					<Name><![CDATA[ACTIVE]]></Name>
 					<X>520</X><Y>180</Y>
 					<Label><X>10</X><Y>10</Y></Label>
 					<PublicFlag>false</PublicFlag>
@@ -1764,7 +1769,7 @@ import com.google.common.collect.Lists;]]></Import>
 				</StatechartElement>
 				<StatechartElement Class="State" ParentState="ROOT_NODE">
 					<Id>1600032460433</Id>
-					<Name><![CDATA[state]]></Name>
+					<Name><![CDATA[OCCUPIED]]></Name>
 					<X>520</X><Y>250</Y>
 					<Label><X>10</X><Y>10</Y></Label>
 					<PublicFlag>false</PublicFlag>
@@ -1939,6 +1944,7 @@ import com.google.common.collect.Lists;]]></Import>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1600032406125" Target="1600032460433" Trigger="message">
+						<Action><![CDATA[processAndForward(msg);]]></Action>
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[1]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
@@ -1948,9 +1954,9 @@ import com.google.common.collect.Lists;]]></Import>
 							<Code><![CDATA[1]]></Code>
 							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
 						</Rate>
-						<MessageType><![CDATA[CapabilityAdvert]]></MessageType>
+						<MessageType><![CDATA[ProcessingRequest]]></MessageType>
 						<DefaultTransition>true</DefaultTransition>
-						<FilterType><![CDATA[satisfies]]></FilterType>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
 						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
 						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
 					</Properties>	
@@ -2176,6 +2182,88 @@ List<CapabilityAdvert> available = Lists.newArrayList(own);
 available.addAll(connectedCapabilities.values());
 Advertisment msg = new Advertisment(getNodeId(),available);
 return msg;]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1600626608820</Id>
+					<Name><![CDATA[processAndForward]]></Name>
+					<X>510</X><Y>-140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[request]]></Name>
+						<Type><![CDATA[ProcessingRequest]]></Type>
+					</Parameter>
+					<Body><![CDATA[System.out.println(getNodeId()+" received request from "+request.getOrigin());
+request.dataToTransfer = 50;
+request.dataToProcess =0;
+send(request,peekTransferConnection());//todo
+
+
+
+
+
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Agent]]></ReturnType>
+					<Id>1600630013302</Id>
+					<Name><![CDATA[peekProcessingConnection]]></Name>
+					<X>500</X><Y>-210</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[Agent connection = null;
+int maxVal =0;
+List<Agent> cns=this.possibleConnections.getConnections();
+String[] cnids=possibleConnections.getConnections().stream().map(t->(EdgeNode)t).map(EdgeNode::getNodeId).toArray(String[]::new);
+for( Agent a: cns){
+	if(a instanceof FogNode){
+		int val= ((FogNode)a).getAdvert().getRemoteConvolutionExcluding(cnids).computePower;
+		if(val>=maxVal){
+			maxVal=val;
+			connection = a;
+		}
+	}
+}
+if(connection!=null)
+	return connection;
+for( Agent a: cns)
+	if(a instanceof Gateway)
+		return a;
+for( Agent a: cns)
+	if(a instanceof Cloud)
+		return a;
+return null;//todo here may be regular sensor retutrned as well]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Agent]]></ReturnType>
+					<Id>1600630046566</Id>
+					<Name><![CDATA[peekTransferConnection]]></Name>
+					<X>500</X><Y>-240</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[List<Agent> cns=this.possibleConnections.getConnections();
+
+for( Agent a: cns)
+	if(a instanceof Cloud)
+		return a;
+for( Agent a: cns)
+	if(a instanceof Gateway)
+		return a;
+for( Agent a: cns)
+	if(a instanceof FogNode)
+		return a;
+
+return null;//todo here may be regular sensor retutrned as well]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -2443,6 +2531,109 @@ return msg;]]></Body>
 					</Properties>                 
 				</Variable>
 			</Variables>
+			<StatechartElements>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600631414174</Id>
+					<Name><![CDATA[INIT]]></Name>
+					<X>130</X><Y>180</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600631426439</Id>
+					<Name><![CDATA[TRANSFER]]></Name>
+					<X>130</X><Y>270</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="EntryPoint" ParentState="ROOT_NODE">
+					<Id>1600631417632</Id>
+					<Name><![CDATA[statechart]]></Name>
+					<X>180</X><Y>150</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>30</Y></Point>
+					</Points>
+					<Properties Target="1600631414174">
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600631437579</Id>
+					<Name><![CDATA[transition]]></Name>
+					<X>150</X><Y>210</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>60</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1600631414174" Target="1600631426439" Trigger="message">
+						<Action><![CDATA[System.out.println(getNodeId()+" received request");
+send(msg,peekTransferConnection());]]></Action>
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[ProcessingRequest]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600631441571</Id>
+					<Name><![CDATA[transition1]]></Name>
+					<X>210</X><Y>270</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>-60</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1600631426439" Target="1600631414174" Trigger="timeout">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[0.5]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+			</StatechartElements>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
 					<ReturnModificator>VOID</ReturnModificator>
@@ -2512,6 +2703,63 @@ return msg;]]></Body>
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[return "gw_"+this.getId();]]></Body>
 				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Agent]]></ReturnType>
+					<Id>1600631018522</Id>
+					<Name><![CDATA[peekTransferConnection]]></Name>
+					<X>530</X><Y>-160</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[List<Agent> cns=this.possibleConnections.getConnections();
+
+for( Agent a: cns)
+	if(a instanceof Cloud)
+		return a;
+for( Agent a: cns)
+	if(a instanceof Gateway)
+		return a;
+for( Agent a: cns)
+	if(a instanceof FogNode)
+		return a;
+
+return null;//todo here may be regular sensor retutrned as well]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Agent]]></ReturnType>
+					<Id>1600631031033</Id>
+					<Name><![CDATA[peekProcessingConnection]]></Name>
+					<X>530</X><Y>-140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[Agent connection = null;
+int maxVal =0;
+List<Agent> cns=this.possibleConnections.getConnections();
+String[] cnids=possibleConnections.getConnections().stream().map(t->(EdgeNode)t).map(EdgeNode::getNodeId).toArray(String[]::new);
+for( Agent a: cns){
+	if(a instanceof FogNode){
+		int val= ((FogNode)a).getAdvert().getRemoteConvolutionExcluding(cnids).computePower;
+		if(val>=maxVal){
+			maxVal=val;
+			connection = a;
+		}
+	}
+}
+if(connection!=null)
+	return connection;
+for( Agent a: cns)
+	if(a instanceof Gateway)
+		return a;
+for( Agent a: cns)
+	if(a instanceof Cloud)
+		return a;
+return null;//todo here may be regular sensor retutrned as well]]></Body>
+				</Function>
 			</Functions>
 			<AgentLinks>
 				<AgentLink>
@@ -2526,6 +2774,11 @@ return msg;]]></Body>
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>true</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[Gateway]]></ClassName>
+						<ItemName><![CDATA[statechart]]></ItemName>
+					</StatechartReference>
 					<DrawLine>true</DrawLine>
 					<LineStyle>SOLID</LineStyle>
 					<LineWidth>2</LineWidth>
@@ -2546,6 +2799,11 @@ return msg;]]></Body>
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>false</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[Gateway]]></ClassName>
+						<ItemName><![CDATA[statechart]]></ItemName>
+					</StatechartReference>
 					<DrawLine>true</DrawLine>
 					<LineStyle>DOTTED</LineStyle>
 					<LineWidth>1</LineWidth>
@@ -2758,6 +3016,108 @@ return msg;]]></Body>
 					</Properties>                 
 				</Variable>
 			</Variables>
+			<StatechartElements>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600632295719</Id>
+					<Name><![CDATA[INIT]]></Name>
+					<X>10</X><Y>130</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600632301932</Id>
+					<Name><![CDATA[PROCESSING]]></Name>
+					<X>10</X><Y>200</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="EntryPoint" ParentState="ROOT_NODE">
+					<Id>1600632293550</Id>
+					<Name><![CDATA[statechart]]></Name>
+					<X>20</X><Y>90</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>40</Y></Point>
+					</Points>
+					<Properties Target="1600632295719">
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600632311183</Id>
+					<Name><![CDATA[transition]]></Name>
+					<X>20</X><Y>150</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>10</Y></Point>
+						<Point><X>0</X><Y>50</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1600632295719" Target="1600632301932" Trigger="message">
+						<Action><![CDATA[System.out.println("cloud processed");]]></Action>
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[ProcessingRequest]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600632314709</Id>
+					<Name><![CDATA[transition1]]></Name>
+					<X>80</X><Y>200</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>-40</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1600632301932" Target="1600632295719" Trigger="condition">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+			</StatechartElements>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
 					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
@@ -2797,6 +3157,11 @@ return msg;]]></Body>
 					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
 					<AgentLinkBidirectional>true</AgentLinkBidirectional>
 					<MessageType><![CDATA[Object]]></MessageType>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[Cloud]]></ClassName>
+						<ItemName><![CDATA[statechart]]></ItemName>
+					</StatechartReference>
 					<DrawLine>true</DrawLine>
 					<LineStyle>SOLID</LineStyle>
 					<LineWidth>2</LineWidth>
@@ -3111,8 +3476,8 @@ public class Constants implements Serializable {
 
 	public static final double PENALTY_COEF=0.5;
 	
-	public static final int TRANSFER_FOG = 256;
-	public static final int PROCESS_FOG = 256;
+	public static final int TRANSFER_FOG = 50;
+	public static final int PROCESS_FOG = 50;
 
 	public static final long TIMEOUT_MILLIS = 2000;
 
@@ -3239,13 +3604,13 @@ public class Advertisment implements Serializable {
  * ProcessingRequest
  */	
 public class ProcessingRequest implements Serializable {
-	private Integer dataToProcess;
-	private Integer dataToTransfer;
+	Integer dataToProcess;
+	Integer dataToTransfer;
     private List<String> visitedNodes = new ArrayList<>();
 	
-    public ProcessingRequest(int dataToProcess, int dataToTransfer, String sourceNodeId) {
+    public ProcessingRequest(int dataToProcess, String sourceNodeId) {
     	this.dataToProcess = dataToProcess;
-    	this.dataToTransfer = dataToTransfer;
+    	this.dataToTransfer = 0;
     	visitedNodes.add(sourceNodeId);
     }
 
@@ -3261,6 +3626,10 @@ public class ProcessingRequest implements Serializable {
 	
 	public void visited(String nodeId) {
 		visitedNodes.add(nodeId);
+	}
+	
+	public String getOrigin() {
+		return visitedNodes.get(0);
 	}
 
 	/**
