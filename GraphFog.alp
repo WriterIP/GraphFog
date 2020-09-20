@@ -127,7 +127,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[1000]]></Code>
+							<Code><![CDATA[400]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594542562394</Id>
@@ -151,7 +151,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[500]]></Code>
+							<Code><![CDATA[250]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594542565625</Id>
@@ -175,7 +175,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[39]]></Code>
+							<Code><![CDATA[4]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594542628522</Id>
@@ -199,7 +199,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[10]]></Code>
+							<Code><![CDATA[2]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594542643030</Id>
@@ -223,7 +223,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[5]]></Code>
+							<Code><![CDATA[1]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594542661720</Id>
@@ -271,7 +271,7 @@ this.initializeNetwork();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[100]]></Code>
+							<Code><![CDATA[150]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1594551034291</Id>
@@ -1386,7 +1386,28 @@ return request;]]></Body>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
-					<Body><![CDATA[return null;]]></Body>
+					<Body><![CDATA[Agent connection = null;
+int maxVal =0;
+List<Agent> cns=this.possibleConnections.getConnections();
+String[] cnids=possibleConnections.getConnections().stream().map(t->(EdgeNode)t).map(EdgeNode::getNodeId).toArray(String[]::new);
+for( Agent a: cns){
+	if(a instanceof FogNode){
+		int val= ((FogNode)a).getAdvert().getRemoteConvolutionExcluding(cnids).computePower;
+		if(val>=maxVal){
+			maxVal=val;
+			connection = a;
+		}
+	}
+}
+if(connection!=null)
+	return connection;
+for( Agent a: cns)
+	if(a instanceof Gateway)
+		return a;
+for( Agent a: cns)
+	if(a instanceof Cloud)
+		return a;
+return null;//todo here may be regular sensor retutrned as well]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -2139,6 +2160,22 @@ System.out.println(getNodeId()+" processed capability advert "+cap.toString());]
 		System.out.println("removed entry"+key);
 	}
 }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Advertisment]]></ReturnType>
+					<Id>1600618076347</Id>
+					<Name><![CDATA[getAdvert]]></Name>
+					<X>350</X><Y>-170</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[CapabilityAdvert own = new CapabilityAdvert(getNodeId(),availableCP,availableTP,0);
+List<CapabilityAdvert> available = Lists.newArrayList(own);
+available.addAll(connectedCapabilities.values());
+Advertisment msg = new Advertisment(getNodeId(),available);
+return msg;]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -3164,7 +3201,7 @@ public class Advertisment implements Serializable {
     	this.resources = resources;
     }
     
-    public CapabilityAdvert getRemoteConvolutionExcluding(String nodeId) {
+    public CapabilityAdvert getRemoteConvolutionExcluding(String... nodeId) {
     	double cp=0,tp=0,ctp=0;
     	System.out.println("convoluting "+senderId);
     	for(CapabilityAdvert ad: resources) {
