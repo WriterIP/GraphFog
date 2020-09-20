@@ -1976,7 +1976,7 @@ import com.google.common.collect.Lists;]]></Import>
 					<IconOffset>10.0</IconOffset>
 					<Properties Source="1600032460433" Target="1600032406125" Trigger="timeout">
 						<Timeout Class="CodeUnitValue">
-							<Code><![CDATA[1]]></Code>
+							<Code><![CDATA[0.25]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
 						</Timeout>
 						<Condition><![CDATA[true]]></Condition>
@@ -2198,7 +2198,7 @@ return msg;]]></Body>
 						<Type><![CDATA[ProcessingRequest]]></Type>
 					</Parameter>
 					<Body><![CDATA[System.out.println(getNodeId()+" received request from "+request.getOrigin());
-request.dataToTransfer = 50;
+request.dataToTransfer = 25;
 request.dataToProcess =0;
 send(request,peekTransferConnection());//todo
 
@@ -2618,7 +2618,7 @@ send(msg,peekTransferConnection());]]></Action>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1600631426439" Target="1600631414174" Trigger="timeout">
 						<Timeout Class="CodeUnitValue">
-							<Code><![CDATA[0.5]]></Code>
+							<Code><![CDATA[0.1]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
 						</Timeout>
 						<Condition><![CDATA[true]]></Condition>
@@ -2970,6 +2970,21 @@ return null;//todo here may be regular sensor retutrned as well]]></Body>
 			<CurrentLevel>1594552453933</CurrentLevel>
 			<ConnectionsId>1594552453929</ConnectionsId>
 			<Variables>
+				<Variable Class="PlainVariable">
+					<Id>1600635144273</Id>
+					<Name><![CDATA[amountReceived]]></Name>
+					<X>210</X><Y>120</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
 				<Variable Class="Parameter">
 					<Id>1594552585169</Id>
 					<Name><![CDATA[coordinate]]></Name>
@@ -3032,7 +3047,7 @@ return null;//todo here may be regular sensor retutrned as well]]></Body>
 				<StatechartElement Class="State" ParentState="ROOT_NODE">
 					<Id>1600632301932</Id>
 					<Name><![CDATA[PROCESSING]]></Name>
-					<X>10</X><Y>200</Y>
+					<X>10</X><Y>220</Y>
 					<Label><X>10</X><Y>10</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -3059,18 +3074,21 @@ return null;//todo here may be regular sensor retutrned as well]]></Body>
 				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
 					<Id>1600632311183</Id>
 					<Name><![CDATA[transition]]></Name>
-					<X>20</X><Y>150</Y>
+					<X>20</X><Y>160</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>false</ShowLabel>
 					<Points>
-						<Point><X>0</X><Y>10</Y></Point>
-						<Point><X>0</X><Y>50</Y></Point>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>20</Y></Point>
+						<Point><X>0</X><Y>60</Y></Point>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1600632295719" Target="1600632301932" Trigger="message">
-						<Action><![CDATA[System.out.println("cloud processed");]]></Action>
+						<Action><![CDATA[amountReceived =amountReceived+ msg.dataToTransfer;
+
+System.out.println("cloud processed "+amountReceived);]]></Action>
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[1]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
@@ -3090,14 +3108,14 @@ return null;//todo here may be regular sensor retutrned as well]]></Body>
 				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
 					<Id>1600632314709</Id>
 					<Name><![CDATA[transition1]]></Name>
-					<X>80</X><Y>200</Y>
+					<X>80</X><Y>220</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>false</ShowLabel>
 					<Points>
 						<Point><X>0</X><Y>0</Y></Point>
-						<Point><X>0</X><Y>-40</Y></Point>
+						<Point><X>0</X><Y>-60</Y></Point>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1600632301932" Target="1600632295719" Trigger="condition">
