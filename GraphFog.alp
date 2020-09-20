@@ -4,7 +4,7 @@
 	         AnyLogic Project File 
 *************************************************	         
 -->
-<AnyLogicWorkspace WorkspaceVersion="1.9" AnyLogicVersion="8.5.2.202001241833" AlpVersion="8.5.1">
+<AnyLogicWorkspace WorkspaceVersion="1.9" AnyLogicVersion="8.6.0.202008201438" AlpVersion="8.5.7">
 <Model>
 	<Id>1594465132982</Id>
 	<Name><![CDATA[GraphFog]]></Name>
@@ -488,6 +488,9 @@ return result;
 						</Parameter>
 						<Parameter>
 							<Name><![CDATA[communicationRadius]]></Name>
+						</Parameter>
+						<Parameter>
+							<Name><![CDATA[dataAmount]]></Name>
 						</Parameter>
 					</Parameters>
 					<ReplicationFlag>true</ReplicationFlag>
@@ -1011,6 +1014,30 @@ return result;
 						</ParameterEditor>
 					</Properties>                 
 				</Variable>
+				<Variable Class="Parameter">
+					<Id>1600610817523</Id>
+					<Name><![CDATA[dataAmount]]></Name>
+					<X>20</X><Y>-230</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[500]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1600610817521</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
 			</Variables>
 			<Functions>
 				<Function AccessType="public" StaticFunction="false">
@@ -1080,6 +1107,18 @@ return result;
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[return "ss_"+this.getId();]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[ProcessingRequest]]></ReturnType>
+					<Id>1600610611036</Id>
+					<Name><![CDATA[emitData]]></Name>
+					<X>170</X><Y>-110</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[return ProcessingRequest request = new ProcessingRequest(this.dataAmount, this.dataAmount, this.getNodeId());]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -1412,6 +1451,31 @@ import com.google.common.collect.Lists;]]></Import>
 						<FillColor/>
 					</Properties>
 				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600032406125</Id>
+					<Name><![CDATA[doing]]></Name>
+					<X>520</X><Y>180</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="30">
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
+				<StatechartElement Class="State" ParentState="ROOT_NODE">
+					<Id>1600032460433</Id>
+					<Name><![CDATA[state]]></Name>
+					<X>520</X><Y>250</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties Width="100" Height="50">
+						<EntryAction><![CDATA[this.availableCP-]]></EntryAction>
+						<FillColor/>
+					</Properties>
+				</StatechartElement>
 				<StatechartElement Class="EntryPoint" ParentState="ROOT_NODE">
 					<Id>1594557133735</Id>
 					<Name><![CDATA[statechartAV]]></Name>
@@ -1532,6 +1596,81 @@ import com.google.common.collect.Lists;]]></Import>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1594561324592" Target="1594557138324" Trigger="condition">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[unconditionally]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="EntryPoint" ParentState="ROOT_NODE">
+					<Id>1600032392168</Id>
+					<Name><![CDATA[statechartProcess]]></Name>
+					<X>570</X><Y>140</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>40</Y></Point>
+					</Points>
+					<Properties Target="1600032406125">
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600032520959</Id>
+					<Name><![CDATA[transition4]]></Name>
+					<X>540</X><Y>200</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>10</Y></Point>
+						<Point><X>0</X><Y>50</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1600032406125" Target="1600032460433" Trigger="message">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[CapabilityAdvert]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[satisfies]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[true]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1600033069457</Id>
+					<Name><![CDATA[transition5]]></Name>
+					<X>590</X><Y>250</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>0</X><Y>-40</Y></Point>
+					</Points>
+					<IconOffset>10.0</IconOffset>
+					<Properties Source="1600032460433" Target="1600032406125" Trigger="timeout">
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[1]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
@@ -1743,6 +1882,11 @@ System.out.println(getNodeId()+" processed capability advert "+cap.toString());]
 						<ClassName><![CDATA[FogNode]]></ClassName>
 						<ItemName><![CDATA[statechartAV]]></ItemName>
 					</StatechartReference>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[FogNode]]></ClassName>
+						<ItemName><![CDATA[statechartProcess]]></ItemName>
+					</StatechartReference>
 					<LineStyle>SOLID</LineStyle>
 					<LineWidth>1</LineWidth>
 					<LineColor>-16777216</LineColor>
@@ -1766,6 +1910,11 @@ System.out.println(getNodeId()+" processed capability advert "+cap.toString());]
 						<PackageName><![CDATA[graphfog]]></PackageName>
 						<ClassName><![CDATA[FogNode]]></ClassName>
 						<ItemName><![CDATA[statechartAV]]></ItemName>
+					</StatechartReference>
+					<StatechartReference>
+						<PackageName><![CDATA[graphfog]]></PackageName>
+						<ClassName><![CDATA[FogNode]]></ClassName>
+						<ItemName><![CDATA[statechartProcess]]></ItemName>
 					</StatechartReference>
 					<DrawLine>true</DrawLine>
 					<LineStyle>DOTTED</LineStyle>
@@ -2531,6 +2680,7 @@ System.out.println(getNodeId()+" processed capability advert "+cap.toString());]
 				<FinalDate><![CDATA[1597104000000]]></FinalDate>	
 				<FinalTime><![CDATA[100.0]]></FinalTime>	
 			</ModelTimeProperties>
+			<BypassInitialScreen>false</BypassInitialScreen>
 		</SimulationExperiment>	
 	</Experiments>
 	<JavaClasses>
@@ -2593,6 +2743,7 @@ public class Coordinate implements Serializable {
 		<JavaClass>
 			<Id>1594554009443</Id>
 			<Name><![CDATA[CapabilityAdvert]]></Name>
+			<Description><![CDATA[message]]></Description>
 			<Text><![CDATA[/**
  * CapabilityAdvert
  */	
@@ -2691,6 +2842,7 @@ public class EdgeResource implements Serializable {
 	public String toString() {
 		return super.toString();
 	}
+	
 	//add ignored node to visited
 	private CapabilityAdvert getConvolutionIgnoringNode(CapabilityAdvert current, EdgeResource res, Set<String> visited) {
 		int cp = current.computePower;
@@ -2699,7 +2851,7 @@ public class EdgeResource implements Serializable {
 		if(res.connected.isEmpty()||visited.containsAll(res.connected.keySet())) {
 	    	return new CapabilityAdvert(id,(int)cp,(int)tp,(int)ctp);
 		}
-	\
+	
     	return new CapabilityAdvert(id,(int)cp,(int)tp,(int)ctp);
 	}
 
@@ -2734,7 +2886,7 @@ public class Advertisment implements Serializable {
     	System.out.println("convoluting "+senderId);
     	for(CapabilityAdvert ad: resources) {
     		System.out.print(ad.toString()+" ");
-    		if(ad.nodeID.equals(nodeId)) {
+    		if(ad.nodeID.equals(nodeId)||ad.nodeID.equals(senderId)==false) {
     			continue;
     		}
     		cp+=Constants.PENALTY_COEF*ad.computePower;
@@ -2745,6 +2897,74 @@ public class Advertisment implements Serializable {
     	return new CapabilityAdvert(senderId,(int)cp,(int)tp,(int)ctp);
     }
     
+
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1595186406195</Id>
+			<Name><![CDATA[ProcessingRequest]]></Name>
+			<Text><![CDATA[/**
+ * ProcessingRequest
+ */	
+public class ProcessingRequest implements Serializable {
+	private Integer dataToProcess;
+	private Integer dataToTransfer;
+    private List<String> visitedNodes = new ArrayList<>();
+	
+    public ProcessingRequest(int dataToProcess, int dataToTransfer, String sourceNodeId) {
+    	this.dataToProcess = dataToProcess;
+    	this.dataToTransfer = dataToTransfer;
+    	visitedNodes.add(sourceNodeId);
+    }
+
+    
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+	
+	public boolean hasVisited(String nodeId) {
+		return visitedNodes.contains(nodeId);
+	}
+	
+	public void visited(String nodeId) {
+		visitedNodes.add(nodeId);
+	}
+
+	/**
+	 * This number is here for model snapshot storing purpose<br>
+	 * It needs to be changed when this class gets changed
+	 */ 
+	private static final long serialVersionUID = 1L;
+
+}]]></Text>
+		</JavaClass>
+		<!--   =========   Java Class   ========  -->
+		<JavaClass>
+			<Id>1600030138983</Id>
+			<Name><![CDATA[MyClass]]></Name>
+			<Text><![CDATA[/**
+ * MyClass
+ */	
+public class MyClass implements Serializable {
+
+    /**
+     * Default constructor
+     */
+    public MyClass() {
+    }
 
 	@Override
 	public String toString() {
@@ -2778,5 +2998,11 @@ public class Advertisment implements Serializable {
 			<ReferencedFromUserCode>false</ReferencedFromUserCode>
 		</Resource>
 	</ModelResources>
+    <RequiredLibraryReference>
+		<LibraryName><![CDATA[com.anylogic.libraries.modules.markup_descriptors]]></LibraryName>
+		<VersionMajor>1</VersionMajor>
+		<VersionMinor>0</VersionMinor>
+		<VersionBuild>0</VersionBuild>
+    </RequiredLibraryReference>
 </Model>
 </AnyLogicWorkspace>
