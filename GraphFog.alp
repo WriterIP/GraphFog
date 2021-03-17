@@ -1817,7 +1817,7 @@ targetView.navigateTo();]]></Body>
 					</RecurrenceCode>
 					<EmbeddedIcon>false</EmbeddedIcon>
 					<Width>321.36939010356735</Width>
-					<Height>270</Height>
+					<Height>280</Height>
 					<BackgroundColor/>
 					<BorderColor/>
 					<ChartArea>
@@ -1832,7 +1832,7 @@ targetView.navigateTo();]]></Body>
 					<Legend>
 						<Place>SOUTH</Place>
 						<TextColor>-16777216</TextColor>
-						<Size>30</Size>
+						<Size>40</Size>
 					</Legend>
 					<Labels>
 						<HorLabelsPosition>DEFAULT</HorLabelsPosition>
@@ -5572,10 +5572,46 @@ System.out.println("cloud processed "+amountReceived);]]></Action>
 			<MaximumMemory>512</MaximumMemory>
 			<RandomNumberGenerationType>fixedSeed</RandomNumberGenerationType>
 			<CustomGeneratorCode>new Random()</CustomGeneratorCode>
+			<AfterSimulationRunCode><![CDATA[double processedPart = root._packagesProcessedGateway/root._packagesFromSensorsSent;
+dataset.add(root.sensorsRequestsPerSecond, processedPart);
+
+/*
+plot.removeAll();
+plot.addDataSet(dataset,
+	"rate = " + processedPart,
+	dodgerBlue, true, Chart.INTERPOLATION_LINEAR,
+	1, Chart.POINT_NONE
+);
+*/
+]]></AfterSimulationRunCode>
 			<SeedValue>1</SeedValue>
 			<SelectionModeForSimultaneousEvents>LIFO</SelectionModeForSimultaneousEvents>
 			<VmArgs><![CDATA[]]></VmArgs>
 			<LoadRootFromSnapshot>false</LoadRootFromSnapshot>
+			<AnalysisData>
+    			<DataSet>
+					<Id>1616012561279</Id>
+					<Name><![CDATA[dataset]]></Name>
+					<X>-80</X><Y>320</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<AutoUpdate>false</AutoUpdate>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1616054400000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</RecurrenceCode>
+					<FreezeXAxis>false</FreezeXAxis>
+					<SamplesToKeep>100</SamplesToKeep>
+				</DataSet>
+			</AnalysisData>
 
 			<Presentation>
 				<Text>
@@ -6612,9 +6648,250 @@ System.out.println("cloud processed "+amountReceived);]]></Action>
 					</Font>
 					<Alignment>RIGHT</Alignment>
 				</Text>
+				<Rectangle>
+					<Id>0</Id>
+					<Name><![CDATA[rectangle8]]></Name>
+					<X>40</X><Y>650</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>1</LineWidth>
+					<LineColor/>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<Width>210</Width>
+					<Height>30</Height>
+					<Rotation>0.0</Rotation>
+					<FillColor>-657931</FillColor>
+					<FillMaterial>null</FillMaterial>
+				</Rectangle>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text38]]></Name>
+					<X>50</X><Y>660</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12171190</Color>
+					<Text><![CDATA[queueSizePackagesCountGateway]]></Text>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>LEFT</Alignment>
+				</Text>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text39]]></Name>
+					<X>240</X><Y>660</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<VisibleCode><![CDATA[getCurrentIteration() > 0]]></VisibleCode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12042869</Color>
+					<Text><![CDATA[?]]></Text>
+					<TextCode><![CDATA[format( queueSizePackagesCountGateway )]]></TextCode>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>RIGHT</Alignment>
+				</Text>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text40]]></Name>
+					<X>50</X><Y>690</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12171190</Color>
+					<Text><![CDATA[secondsToRecieveOneRequestGateway]]></Text>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>LEFT</Alignment>
+				</Text>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text41]]></Name>
+					<X>240</X><Y>690</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<VisibleCode><![CDATA[getCurrentIteration() > 0]]></VisibleCode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12042869</Color>
+					<Text><![CDATA[?]]></Text>
+					<TextCode><![CDATA[format( secondsToRecieveOneRequestGateway )]]></TextCode>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>RIGHT</Alignment>
+				</Text>
+				<Rectangle>
+					<Id>0</Id>
+					<Name><![CDATA[rectangle9]]></Name>
+					<X>40</X><Y>710</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>1</LineWidth>
+					<LineColor/>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<Width>210</Width>
+					<Height>30</Height>
+					<Rotation>0.0</Rotation>
+					<FillColor>-657931</FillColor>
+					<FillMaterial>null</FillMaterial>
+				</Rectangle>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text42]]></Name>
+					<X>50</X><Y>720</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12171190</Color>
+					<Text><![CDATA[dataProcessedPerSecondGateway]]></Text>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>LEFT</Alignment>
+				</Text>
+				<Text>
+					<Id>0</Id>
+					<Name><![CDATA[text43]]></Name>
+					<X>240</X><Y>720</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<VisibleCode><![CDATA[getCurrentIteration() > 0]]></VisibleCode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12042869</Color>
+					<Text><![CDATA[?]]></Text>
+					<TextCode><![CDATA[format( dataProcessedPerSecondGateway )]]></TextCode>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>12</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>RIGHT</Alignment>
+				</Text>
+    			<Plot>
+					<Id>1616012333413</Id>
+					<Name><![CDATA[plot]]></Name>
+					<X>440</X><Y>120</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<AutoUpdate>true</AutoUpdate>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1616054400000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</RecurrenceCode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Width>540</Width>
+					<Height>460</Height>
+					<BackgroundColor/>
+					<BorderColor/>
+					<ChartArea>
+						<XOffset>50</XOffset>
+						<YOffset>30</YOffset>
+						<Width>460</Width>
+						<Height>370</Height>
+						<BackgroundColor>-1</BackgroundColor>
+						<BorderColor>-16777216</BorderColor>
+						<GridColor>-12566464</GridColor>
+					</ChartArea>
+					<Legend>
+						<Place>SOUTH</Place>
+						<TextColor>-16777216</TextColor>
+						<Size>30</Size>
+					</Legend>
+					<Labels>
+						<HorLabelsPosition>DEFAULT</HorLabelsPosition>
+						<VerLabelsPosition>DEFAULT</VerLabelsPosition>
+						<TextColor>-12566464</TextColor>
+					</Labels>
+					<ShowLegend>true</ShowLegend>
+					<VerScaleFromExpression><![CDATA[0]]></VerScaleFromExpression>
+					<VerScaleToExpression><![CDATA[1]]></VerScaleToExpression>
+					<VerScaleType>AUTO</VerScaleType>
+					<DrawLine>true</DrawLine>
+					<Interpolation>LINEAR</Interpolation>
+					<DatasetExpression>  
+						<Title><![CDATA[]]></Title>
+					<Expression><![CDATA[dataset]]></Expression>
+					<Color>-14774017</Color>
+					<Expression2><![CDATA[0]]></Expression2>
+					<Expression2Flag>false</Expression2Flag>
+						<PointStyle>CIRCLE</PointStyle>
+						<LineWidth>1.0</LineWidth>
+						<HorizontalAxisExpression><![CDATA[0]]></HorizontalAxisExpression>
+					</DatasetExpression>
+					<SamplesToKeep>100</SamplesToKeep>
+					<HorScaleFromExpression><![CDATA[0]]></HorScaleFromExpression>
+					<HorScaleToExpression><![CDATA[1]]></HorScaleToExpression>
+					<HorScaleType>AUTO</HorScaleType>
+    			</Plot>
 			</Presentation>
 
-			<AllowParallelEvaluations>true</AllowParallelEvaluations>
+			<AllowParallelEvaluations>false</AllowParallelEvaluations>
 			<UseFreeformParameters>false</UseFreeformParameters>
 			<NumberOfRuns>10</NumberOfRuns>
 			<FreeformParamValue>	
@@ -6725,53 +7002,77 @@ System.out.println("cloud processed "+amountReceived);]]></Action>
 				<Id>1613595600351</Id>
 				<Type>RANGE</Type>
 				<From Class="CodeValue">
-					<Code><![CDATA[10]]></Code>
+					<Code><![CDATA[1]]></Code>
 				</From>
 				<To Class="CodeValue">
-					<Code><![CDATA[1000]]></Code>
+					<Code><![CDATA[50]]></Code>
 				</To>
 				<Step Class="CodeValue">
-					<Code><![CDATA[10]]></Code>
+					<Code><![CDATA[1]]></Code>
 				</Step>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1613595998897</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[500]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1613596710150</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[50]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1613597441452</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[0.001]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1613597562263</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[100]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1613598138337</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[2]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1616009395644</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[50]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1616009395647</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[0.001]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<RangeVariationParamValue>	
 				<Id>1616009395650</Id>
 				<Type>FIXED</Type>
+				<Expression Class="CodeValue">
+					<Code><![CDATA[100]]></Code>
+				</Expression>
 			</RangeVariationParamValue>
 			<ModelTimeProperties>
 				<StopOption><![CDATA[Stop at specified time]]></StopOption>
 				<InitialDate><![CDATA[1594425600000]]></InitialDate>	
 				<InitialTime><![CDATA[0.0]]></InitialTime>	
-				<FinalDate><![CDATA[1597104000000]]></FinalDate>	
-				<FinalTime><![CDATA[100.0]]></FinalTime>	
+				<FinalDate><![CDATA[1594425800000]]></FinalDate>	
+				<FinalTime><![CDATA[200.0]]></FinalTime>	
 			</ModelTimeProperties>
 			<PresentationProperties>
 				<EnableZoomAndPanning>true</EnableZoomAndPanning>
